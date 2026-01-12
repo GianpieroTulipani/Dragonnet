@@ -1,0 +1,22 @@
+name: dragonnet_pytorch
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - ipython
+  - jupyterlab
+  - matplotlib
+  - notebook
+  - numpy
+  - pandas
+  - scikit-learn
+  - black
+  - flake8
+  - isort
+  - tqdm
+  - torch
+  - pip:
+    - python-dotenv
+    - mkdocs
+    - -e .
