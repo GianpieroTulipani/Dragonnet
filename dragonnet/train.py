@@ -202,25 +202,22 @@ def run_acic(
     ratio=1.
 ):
     full_path = os.path.abspath(folder)
+    print(full_path)
     covariate_csv = os.path.join(full_path, 'raw', 'x.csv')
-
+    print(covariate_csv)
     x_raw = load_and_format_covariates(covariate_csv)
 
     simulation_dir = os.path.join(full_path, 'raw', 'train_scaling')
-
+    print(simulation_dir)
     simulation_files = sorted(glob.glob("{}/*".format(simulation_dir)))
 
     for simulation_file in simulation_files:
-        print(simulation_file)
         cf_suffix = "_cf"
         file_extension = ".csv"
         if simulation_file.endswith(cf_suffix + file_extension):
             continue
 
         ufid = os.path.basename(simulation_file)[:-4]
-
-        print(ufid)
-        break
         
         """t, y, x = load_treatment_and_outcome(x_raw, simulation_file)
 
@@ -234,9 +231,9 @@ def run_acic(
                                                                          batch_size=512
                                                                          )
             if is_targeted_regularization:
-                output_dir = os.path.join(full_path, 'processed', "targeted_regularization")
+                output_dir = os.path.join(full_path, 'processed', ufid, "targeted_regularization")
             else:
-                output_dir = os.path.join(full_path, 'processed', "baseline")
+                output_dir = os.path.join(full_path, 'processed', ufid, "baseline")
             
             os.makedirs(output_dir, exist_ok=True)
             for num, output in test_outputs:
