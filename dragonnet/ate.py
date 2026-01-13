@@ -120,7 +120,6 @@ def ate(folder, split):
 
                 psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(q_t0, q_t1, g, t, y,
                                                                     truncate_level=0.01)
-                
                 all_psi_n.append(psi_n)
                 all_psi_tmle.append(psi_tmle)
 

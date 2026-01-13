@@ -214,10 +214,14 @@ def train_and_predict(
                     x_batch = x_batch.to(device)
                     outputs.append(model(x_batch))
             return torch.cat(outputs, dim=0)
-        
+    
         yt_hat_train = predict_loader(train_loader)
         yt_hat_val = predict_loader(val_loader)
         yt_hat_test = predict_loader(test_loader)
+
+        print(yt_hat_test)
+        print(yt_hat_train)
+        print(yt_hat_val)
 
         train_outputs.append(_split_output(
             yt_hat_train.cpu().numpy(), t_train, y_train, y_scaler, x_train)
@@ -284,6 +288,8 @@ def run_acic(
             for num, output in enumerate(val_outputs):
                 np.savez_compressed(os.path.join(output_dir, "{}_val.npz".format(num)),
                                     **output)
+        
+        break
 
 #$env:KMP_DUPLICATE_LIB_OK="TRUE"
 if __name__ == '__main__':
