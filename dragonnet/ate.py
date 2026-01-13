@@ -106,6 +106,7 @@ def ate(folder, split):
             npz_path = os.path.join(processed_path, ufid, model)
 
             ground_truth = load_truth(scaling_path, ufid)
+            print(ground_truth)
 
             all_psi_n, all_psi_tmle = [], []
             for rep in range(1):
