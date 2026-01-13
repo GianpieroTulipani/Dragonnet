@@ -10,8 +10,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
-
 def load_and_format_covariates(file_path):
     df = pd.read_csv(file_path, index_col='sample_id', header=0, sep=',')
     return df
@@ -110,10 +108,10 @@ def train_and_predict(
         model = Dragonnet(x_train.shape[1]).to(device)
         model.compile()
 
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.SGD(
             model.parameters(),
             lr=1e-3,
-            weight_decay=0.01
+            weight_decay=1e-5
             )
 
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -152,7 +150,7 @@ def train_and_predict(
                 train_samples += x_batch.size(0)
 
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
                 optimizer.step()
 
                 train_loss += loss.item()

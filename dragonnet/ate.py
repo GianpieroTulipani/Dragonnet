@@ -111,6 +111,13 @@ def ate(folder, split):
             for rep in range(25):
                 q_t0, q_t1, g, t, y = load_data(split, rep, npz_path)
 
+                print("g min/max:", g.min(), g.max())
+                print("Kept after trunc:", ((g >= 0.01) & (g <= 0.99)).sum())
+                print("Any NaN in q_t0?", np.isnan(q_t0).any())
+
+                if q_t0.size == 0:
+                    print("EMPTY after truncation")
+
                 psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(q_t0, q_t1, g, t, y,
                                                                     truncate_level=0.01)
                 
