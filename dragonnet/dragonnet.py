@@ -91,7 +91,7 @@ class Dragonnet(nn.Module):
             nn.ELU(),
             nn.Linear(200, 200),
             nn.ELU(),
-            nn.Linear(),
+            nn.Linear(200, 200),
             nn.ELU()
         )
 
