@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
 
 torch._logging.set_logs(graph_code=True)
+os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 def load_and_format_covariates(file_path):
     df = pd.read_csv(file_path, index_col='sample_id', header=0, sep=',')
