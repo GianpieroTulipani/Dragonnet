@@ -113,7 +113,7 @@ def train_and_predict(
 
         optimizer = torch.optim.SGD(
             model.parameters(),
-            lr=1e-3,
+            lr=1e-5,
             momentum=0.9,
             nesterov=True,
             weight_decay=0.01
