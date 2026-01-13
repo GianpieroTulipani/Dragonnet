@@ -10,8 +10,8 @@ def regression_loss(concat_true, concat_pred):
     y0_pred = concat_pred[:, 0]
     y1_pred = concat_pred[:, 1]
 
-    loss0 = torch.sum((1. - t_true) * (y_true - y0_pred) ** 2)
-    loss1 = torch.sum(t_true * (y_true - y1_pred) ** 2)
+    loss0 = torch.sum((1. - t_true) * torch.square(y_true - y0_pred))
+    loss1 = torch.sum(t_true * torch.square(y_true - y1_pred))
 
     return loss0 + loss1
 
@@ -44,7 +44,7 @@ def tarreg_loss(ratio, concat_true, concat_pred):
     t_pred = concat_pred[:, 2]
 
     eps = concat_pred[:, 3]
-    t_pred = (t_pred + 0.001) / 1.002
+    t_pred = (t_pred + 0.01) / 1.02
 
     y_pred = t_true * y1_pred + (1 - t_true) * y0_pred
 
