@@ -98,11 +98,12 @@ def ate(folder, split):
 
     ufids = sorted(glob.glob("{}/*".format(processed_path)))
     for model in ['baseline', 'targeted_regularization']:
-        npz_path = os.path.join(processed_path, ufid, model)
         ufid_simple = pd.Series(np.zeros(len(ufids)))
         ufid_tmle = pd.Series(np.zeros(len(ufids)))
         for j in range(len(ufids)):
             ufid = os.path.basename(ufids[j])
+
+            npz_path = os.path.join(processed_path, ufid, model)
 
             ground_truth = load_truth(scaling_path, ufid)
 
