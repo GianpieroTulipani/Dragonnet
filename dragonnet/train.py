@@ -27,8 +27,9 @@ def load_treatment_and_outcome(covariates, file_path, standardize=True):
     return t.reshape(-1,1), y.reshape(-1,1), x
 
 def _split_output(yt_hat, t, y, y_scaler, x):
-    q_t0 = y_scaler.inverse_transform(yt_hat[:, 0].copy())
-    q_t1 = y_scaler.inverse_transform(yt_hat[:, 1].copy())
+    q_t0 = y_scaler.inverse_transform(yt_hat[:, 0].copy().reshape(-1, 1))
+    q_t1 = y_scaler.inverse_transform(yt_hat[:, 1].copy().reshape(-1, 1))
+
     g = yt_hat[:, 2].copy()
 
     if yt_hat.shape[1] == 4:
@@ -36,7 +37,7 @@ def _split_output(yt_hat, t, y, y_scaler, x):
     else:
         eps = np.zeros_like(yt_hat[:, 2])
 
-    y = y_scaler.inverse_transform(y.copy())
+    y = y_scaler.inverse_transform(y.copy().reshape(-1, 1))
 
     return {'q_t0': q_t0, 'q_t1': q_t1, 'g': g, 't': t, 'y': y, 'x': x, 'eps': eps}
 
