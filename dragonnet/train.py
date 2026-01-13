@@ -121,8 +121,7 @@ def train_and_predict(
             patience=5,
             threshold=0.0,
             cooldown=0,
-            min_lr=0.0,
-            verbose=True
+            min_lr=0.0
         )
 
         loss_fn = tarreg_loss if targeted_regularization else dragonnet_loss
