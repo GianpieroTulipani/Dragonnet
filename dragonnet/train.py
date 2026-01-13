@@ -110,11 +110,9 @@ def train_and_predict(
         model = Dragonnet(x_train.shape[1]).to(device)
         model.compile()
 
-        optimizer = torch.optim.SGD(
+        optimizer = torch.optim.Adam(
             model.parameters(),
-            lr=1e-5,
-            momentum=0.9,
-            nesterov=True,
+            lr=1e-3,
             weight_decay=0.01
             )
 
@@ -148,8 +146,7 @@ def train_and_predict(
                 concat_pred = model(x_batch)
 
                 concat_true = torch.cat([y_batch, t_batch], dim=1)
-                print("Min/Max t_batch:", t_batch.min(), t_batch.max())
-                print("Min/Max concat_pred:", concat_pred.min().item(), concat_pred.max().item())
+
                 loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
                 mse = regression_loss(concat_true, concat_pred)
                 train_samples += x_batch.size(0)
