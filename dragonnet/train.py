@@ -106,6 +106,7 @@ def train_and_predict(
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
         model = Dragonnet(x_train.shape[1]).to(device)
+        model = torch.compile(model)
 
         optimizer = torch.optim.SGD(
             model.parameters(),
