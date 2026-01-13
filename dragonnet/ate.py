@@ -93,6 +93,13 @@ def ate(folder, split):
     scaling_path = os.path.join(full_path, folder, 'raw', 'train_scaling')
     processed_path = os.path.join(full_path, folder, 'processed')
 
+    print("full_path:", full_path)
+    print("scaling_path exists?", os.path.exists(scaling_path))
+    print("processed_path exists?", os.path.exists(processed_path))
+
+    ufids = sorted(glob.glob("{}/*".format(processed_path)))
+    print("ufids found:", ufids)
+
     dict = defaultdict(float)
     tmle_dict = defaultdict(float)
 
