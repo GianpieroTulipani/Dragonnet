@@ -111,7 +111,7 @@ def train_and_predict(
         model = Dragonnet(x_train.shape[1]).to(device)
         model.compile()
 
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.SGD(
             model.parameters(),
             lr=1e-3,
             momentum=0.9,
