@@ -19,7 +19,7 @@ def binary_classification_loss(concat_true, concat_pred):
     t_true = concat_true[:, 1]
     t_pred = concat_pred[:, 2]
 
-    t_pred = torch.clamp(t_pred, 1e-7, 1-1e-7)
+    t_pred = torch.clamp(t_pred, 1e-6, 1-1e-6)
 
     losst = F.binary_cross_entropy(
         t_pred,
@@ -34,6 +34,11 @@ def dragonnet_loss(concat_true, concat_pred):
 
 
 def tarreg_loss(ratio, concat_true, concat_pred):
+    """
+    Targeted regularization loss for Dragonnet.
+    Ensures numerical stability by clamping probabilities and perturbation terms.
+    """
+    # Vanilla Dragonnet loss
     vanilla_loss = dragonnet_loss(concat_true, concat_pred)
 
     y_true = concat_true[:, 0]
@@ -44,17 +49,25 @@ def tarreg_loss(ratio, concat_true, concat_pred):
     t_pred = concat_pred[:, 2]
     eps = concat_pred[:, 3]
 
-    t_pred = torch.clamp(t_pred, 1e-7, 1-1e-7)
+    # Clamp predicted treatment probabilities to avoid log(0) or division by zero
+    t_pred = torch.clamp(t_pred, 1e-6, 1 - 1e-6)
 
+    # Predicted outcome for observed treatment
     y_pred = t_true * y1_pred + (1 - t_true) * y0_pred
 
+    # h term in targeted regularization
     h = t_true / t_pred - (1 - t_true) / (1 - t_pred)
+    # Clamp h to prevent extreme values
+    h = torch.clamp(h, -1e6, 1e6)
 
+    # Perturb outcomes with epsilon
     y_pert = y_pred + eps * h
 
-    targeted_regularization = torch.sum((y_true - y_pert) ** 2)
+    # Targeted regularization term
+    targeted_reg = torch.sum((y_true - y_pert) ** 2)
 
-    loss = vanilla_loss + ratio * targeted_regularization
+    # Total loss
+    loss = vanilla_loss + ratio * targeted_reg
     return loss
 
 class DatasetACIC(Dataset):
@@ -76,9 +89,11 @@ class DatasetACIC(Dataset):
 class EpsilonLayer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.epsilon = nn.Parameter(torch.randn(1, 1))
+        # Initialize to zero instead of random to avoid explosions
+        self.epsilon = nn.Parameter(torch.zeros(1, 1))
 
     def forward(self, t_pred):
+        # Expand epsilon to match batch size
         return self.epsilon.expand_as(t_pred)
     
     
