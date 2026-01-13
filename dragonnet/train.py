@@ -26,7 +26,7 @@ def load_treatment_and_outcome(covariates, file_path, standardize=True):
         x = normal_scalar.fit_transform(x)
     return t.reshape(-1,1), y.reshape(-1,1), x
 
-def _split_output(yt_hat, t, y, y_scaler, x, index):
+def _split_output(yt_hat, t, y, y_scaler, x):
     q_t0 = y_scaler.inverse_transform(yt_hat[:, 0].copy())
     q_t1 = y_scaler.inverse_transform(yt_hat[:, 1].copy())
     g = yt_hat[:, 2].copy()
