@@ -71,8 +71,8 @@ def train_and_predict(
         ratio=1.,
         val_split=0.2,
         batch_size=512,
-        num_epochs=100,
-        patience=5,
+        num_epochs=300,
+        patience=40,
         runs=1,
         device=None
 ):
@@ -111,10 +111,12 @@ def train_and_predict(
         model = Dragonnet(x_train.shape[1]).to(device)
         model.compile()
 
-        optimizer = torch.optim.SGD(
+        optimizer = torch.optim.Adam(
             model.parameters(),
             lr=1e-3,
-            weight_decay=1e-5
+            momentum=0.9,
+            nesterov=True,
+            weight_decay=0.01
             )
 
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -153,7 +155,7 @@ def train_and_predict(
                 train_samples += x_batch.size(0)
 
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
 
                 train_loss += loss.item()
@@ -246,13 +248,15 @@ def run_acic(
     simulation_dir = os.path.join(full_path, 'raw', 'train_scaling')
     simulation_files = sorted(glob.glob("{}/*".format(simulation_dir)))
 
-    for simulation_file in simulation_files:
+    for i, simulation_file in enumerate(simulation_files):
         cf_suffix = "_cf"
         file_extension = ".csv"
         if simulation_file.endswith(cf_suffix + file_extension):
             continue
 
         ufid = os.path.basename(simulation_file)[:-4]
+
+        print(f'Dataset num {i}, {ufid}\n')
         
         t, y, x = load_treatment_and_outcome(x_raw, simulation_file)
 
