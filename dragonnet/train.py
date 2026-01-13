@@ -70,8 +70,8 @@ def train_and_predict(
         ratio=1.,
         val_split=0.2,
         batch_size=512,
-        num_epochs=300,
-        patience=40,
+        num_epochs=100,
+        patience=5,
         runs=1,
         device=None
 ):
