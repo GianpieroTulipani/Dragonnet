@@ -76,8 +76,8 @@ def train_and_predict(
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    y_scaler = StandardScaler.fit(y_unscaled)
-    y = y_scaler.transform(y_unscaled)
+    y_scaler = StandardScaler()
+    y = y_scaler.fit_transform(y_unscaled)
 
     train_outputs = []
     val_outputs = []
