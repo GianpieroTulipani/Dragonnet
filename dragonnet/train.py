@@ -70,7 +70,7 @@ def train_and_predict(
         batch_size=512,
         num_epochs=300,
         patience=40,
-        runs=25,
+        runs=1,
         device=None
 ):
     
@@ -268,7 +268,7 @@ def run_acic(
                 output_dir = os.path.join(full_path, 'processed', ufid, "baseline")
             
             os.makedirs(output_dir, exist_ok=True)
-            for num, output in test_outputs:
+            for num, output in enumerate(test_outputs):
                 np.savez_compressed(os.path.join(output_dir, "{}_test.npz".format(num)),
                                     **output)
             
@@ -281,6 +281,5 @@ def run_acic(
                                     **output)
 
 #$env:KMP_DUPLICATE_LIB_OK="TRUE"
-
 if __name__ == '__main__':
     run_acic('data')
