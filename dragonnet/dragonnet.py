@@ -76,7 +76,7 @@ class DatasetACIC(Dataset):
 class EpsilonLayer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.epsilon = nn.Parameter(torch.zeros(1,1))
+        self.epsilon = nn.Parameter(torch.randn(1,1), requires_grad=True)
 
 
     def forward(self, t_pred):

@@ -111,6 +111,7 @@ def ate(folder, split):
             for rep in range(1):
                 q_t0, q_t1, g, t, y = load_data(split, rep, npz_path)
 
+                print('\n')
                 print("g min/max:", g.min(), g.max())
                 print("Kept after trunc:", ((g >= 0.01) & (g <= 0.99)).sum())
                 print("Any NaN in q_t0?", np.isnan(q_t0).any())
