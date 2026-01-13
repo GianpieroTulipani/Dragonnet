@@ -108,7 +108,7 @@ def ate(folder, split):
             ground_truth = load_truth(scaling_path, ufid)
 
             all_psi_n, all_psi_tmle = [], []
-            for rep in range(25):
+            for rep in range(1):
                 q_t0, q_t1, g, t, y = load_data(split, rep, npz_path)
 
                 print("g min/max:", g.min(), g.max())
