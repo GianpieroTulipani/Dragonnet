@@ -96,7 +96,8 @@ class Dragonnet(nn.Module):
         )
 
         self.t_head = nn.Sequential(
-            nn.Linear(200, 1)
+            nn.Linear(200, 1),
+            nn.Sigmoid()
         )
 
         self.y0_head = nn.Sequential(
