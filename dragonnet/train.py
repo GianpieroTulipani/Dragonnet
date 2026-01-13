@@ -10,6 +10,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
 
+torch._logging.set_logs(graph_code=True)
+
 def load_and_format_covariates(file_path):
     df = pd.read_csv(file_path, index_col='sample_id', header=0, sep=',')
     return df
@@ -106,7 +108,7 @@ def train_and_predict(
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
         model = Dragonnet(x_train.shape[1]).to(device)
-        model = torch.compile(model)
+        model.compile()
 
         optimizer = torch.optim.SGD(
             model.parameters(),
