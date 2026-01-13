@@ -10,6 +10,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
 
+import torch._dynamo
+torch._dynamo.config.suppress_errors = True
+
 def load_and_format_covariates(file_path):
     df = pd.read_csv(file_path, index_col='sample_id', header=0, sep=',')
     return df
