@@ -90,15 +90,8 @@ def load_data(
 
 def ate(folder, split):
     full_path = os.path.abspath(folder)
-    scaling_path = os.path.join(full_path, folder, 'raw', 'train_scaling')
-    processed_path = os.path.join(full_path, folder, 'processed')
-
-    print("full_path:", full_path)
-    print("scaling_path exists?", os.path.exists(scaling_path))
-    print("processed_path exists?", os.path.exists(processed_path))
-
-    ufids = sorted(glob.glob("{}/*".format(processed_path)))
-    print("ufids found:", ufids)
+    scaling_path = os.path.join(full_path, 'raw', 'train_scaling')
+    processed_path = os.path.join(full_path, 'processed')
 
     dict = defaultdict(float)
     tmle_dict = defaultdict(float)
@@ -118,13 +111,6 @@ def ate(folder, split):
             all_psi_n, all_psi_tmle = [], []
             for rep in range(1):
                 q_t0, q_t1, g, t, y = load_data(split, rep, npz_path)
-
-                print("g min/max:", g.min(), g.max())
-                print("Kept after trunc:", ((g >= 0.01) & (g <= 0.99)).sum())
-                print("Any NaN in q_t0?", np.isnan(q_t0).any())
-
-                if q_t0.size == 0:
-                    print("EMPTY after truncation")
 
                 psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(q_t0, q_t1, g, t, y,
                                                                     truncate_level=0.01)
