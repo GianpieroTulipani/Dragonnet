@@ -1,5 +1,6 @@
 import os
 import glob
+import argparse
 import numpy as np
 import pandas as pd
 from numpy import load
@@ -52,6 +53,25 @@ def psi_tmle_cont_outcome(q_t0, q_t1, g, t, y, eps_hat=None, truncate_level=0.05
 
     return psi_tmle, psi_tmle_std, eps_hat, initial_loss, final_loss, g_loss
 
+def get_estimate(q_t0, q_t1, g, t, y_dragon, truncate_level=0.01):
+    psi_n = psi_naive(q_t0, q_t1, g, t, y_dragon, truncate_level=truncate_level)
+    psi_tmle, psi_tmle_std, eps_hat, initial_loss, final_loss, g_loss = psi_tmle_cont_outcome(q_t0, q_t1, g, t,
+                                                                                              y_dragon,
+                                                                                              truncate_level=truncate_level)
+    return psi_n, psi_tmle, initial_loss, final_loss, g_loss
+
+def load_truth(scaling_path, ufid):
+        cf_suffix = "_cf"
+        file_extension = ".csv"
+        
+        ufid_cf = ufid + cf_suffix + file_extension
+        df = pd.read_csv(os.path.join(scaling_path, ufid_cf), index_col='sample_id', header=0, sep=',')
+
+        y0 = df['y0'].values
+        y1 = df['y1'].values
+
+        diff = y1 - y0
+        return np.mean(diff)
 
 def load_data(
         split,
@@ -70,23 +90,69 @@ def load_data(
 
 def ate(folder, split):
     full_path = os.path.abspath(folder)
-    dir_path = os.path.join(full_path, folder, 'processed')
+    scaling_path = os.path.join(full_path, folder, 'raw', 'train_scaling')
+    processed_path = os.path.join(full_path, folder, 'processed')
 
-    dict = defaultdict(int)
-    tmle_dict = defaultdict(int)
+    dict = defaultdict(float)
+    tmle_dict = defaultdict(float)
 
-    ufids = sorted(glob.glob("{}/*".format(dir_path)))
+    ufids = sorted(glob.glob("{}/*".format(processed_path)))
     for model in ['baseline', 'targeted_regularization']:
-        npz_path = os.path.join(dir_path, ufid, model)
+        npz_path = os.path.join(processed_path, ufid, model)
         ufid_simple = pd.Series(np.zeros(len(ufids)))
         ufid_tmle = pd.Series(np.zeros(len(ufids)))
         for j in range(len(ufids)):
             ufid = os.path.basename(ufids[j])
 
-            #get for the _cf file version the ground truth
+            ground_truth = load_truth(scaling_path, ufid)
 
             all_psi_n, all_psi_tmle = [], []
             for rep in range(25):
                 q_t0, q_t1, g, t, y = load_data(split, rep, npz_path)
-                
 
+                psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(q_t0, q_t1, g, t, y,
+                                                                    truncate_level=0.01)
+                
+                all_psi_n.append(psi_n)
+                all_psi_tmle.append(psi_tmle)
+
+            err = abs(np.nanmean(all_psi_n) - ground_truth)
+            tmle_err = abs(np.nanmean(all_psi_tmle) - ground_truth)
+
+            ufid_simple[j] = err
+            ufid_tmle[j] = tmle_err
+
+        dict[model] = ufid_simple.mean()
+        tmle_dict[model] = ufid_tmle.mean()
+
+    return dict, tmle_dict
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Compute ATE estimates")
+
+    parser.add_argument(
+        '--split',
+        type=str,
+        required=True,
+        choices=['train', 'val', 'test'],
+        help="Dataset split to evaluate (train | val | test)"
+    )
+
+    parser.add_argument(
+        '--folder',
+        type=str,
+        default='data',
+        help="Root data folder (default: data)"
+    )
+
+    args = parser.parse_args()
+
+    results_naive, results_tmle = ate(args.folder, args.split)
+
+    print("Naive ATE error:")
+    for k, v in results_naive.items():
+        print(f"  {k}: {v:.4f}")
+
+    print("\nTMLE ATE error:")
+    for k, v in results_tmle.items():
+        print(f"  {k}: {v:.4f}")

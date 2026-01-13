@@ -8,7 +8,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss
+from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
 
 def load_and_format_covariates(file_path):
     df = pd.read_csv(file_path, index_col='sample_id', header=0, sep=',')
@@ -26,7 +26,6 @@ def load_treatment_and_outcome(covariates, file_path, standardize=True):
         x = normal_scalar.fit_transform(x)
     return t.reshape(-1,1), y.reshape(-1,1), x
 
-
 def _split_output(yt_hat, t, y, y_scaler, x, index):
     q_t0 = y_scaler.inverse_transform(yt_hat[:, 0].copy())
     q_t1 = y_scaler.inverse_transform(yt_hat[:, 1].copy())
@@ -41,6 +40,24 @@ def _split_output(yt_hat, t, y, y_scaler, x, index):
 
     return {'q_t0': q_t0, 'q_t1': q_t1, 'g': g, 't': t, 'y': y, 'x': x, 'eps': eps}
 
+def compute_test_mse(model, loader, device):
+    total_mse = 0.0
+    total_samples = 0
+
+    with torch.no_grad():
+        for x_batch, y_batch, t_batch in loader:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+            t_batch = t_batch.to(device)
+
+            concat_pred = model(x_batch)
+            concat_true = torch.cat([y_batch, t_batch], dim=1)
+
+            mse = regression_loss(concat_true, concat_pred)
+            total_mse += mse.item()
+            total_samples += x_batch.size(0)
+
+    return total_mse / total_samples
 
 def train_and_predict(
         t,
@@ -115,6 +132,8 @@ def train_and_predict(
 
         for epoch in range(num_epochs):
             model.train()
+            train_samples = 0
+            train_mse = 0.0
             train_loss = 0.0
 
             for x_batch, y_batch, t_batch in tqdm(train_loader, desc=f"Run {run + 1}, Epoch {epoch+1}", leave=False):
@@ -127,19 +146,26 @@ def train_and_predict(
 
                 concat_true = torch.cat([y_batch, t_batch], dim=1)
                 loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
+                mse = regression_loss(concat_true, concat_pred)
+                train_samples += x_batch.size(0)
 
                 loss.backward()
                 optimizer.step()
 
                 train_loss += loss.item()
+                train_mse += mse.item()
             
-            avg_train_loss = train_loss / len(train_loader.dataset)
+            avg_train_loss = train_loss / train_samples
+            avg_train_mse = train_mse / train_samples
             current_lr = optimizer.param_groups[0]['lr']
-            print(f"Epoch {epoch+1} - Average train loss per sample: {avg_train_loss:.4f}")
-            print(f"Epoch {epoch}: LR = {current_lr:.2e}")
+
+            print(f"Epoch {epoch+1} - Average train loss per sample: {avg_train_loss:.4f}, Average mse per sample: {avg_train_mse:.4f},  LR = {current_lr:.2e}")
 
             model.eval()
+            val_mse=0.0
             val_loss=0.0
+            val_samples = 0
+
             with torch.no_grad():
                 for x_batch, y_batch, t_batch in tqdm(val_loader, desc=f"Run {run+1} Epoch {epoch+1} Val", leave=False):
                     x_batch = x_batch.to(device)
@@ -150,15 +176,20 @@ def train_and_predict(
                     concat_true = torch.cat([y_batch, t_batch], dim=1)
 
                     loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
+                    mse = regression_loss(concat_true, concat_pred)
+                    val_mse += mse.item()
                     val_loss += loss.item()
+                    val_samples += x_batch.size(0)
                 
-            avg_val_loss = val_loss / len(train_loader.dataset)
-            print(f"Epoch {epoch+1} - Average val loss per sample: {avg_val_loss:.4f}")
+            avg_val_loss = val_loss / val_samples
+            avg_val_mse = val_mse / val_samples
+
+            print(f"Epoch {epoch+1} - Average val loss per sample: {avg_val_loss:.4f}, Average val mse: {avg_val_mse:.4f}")
 
             scheduler.step(avg_val_loss)
             
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
                 epochs_no_improve = 0
                 best_model_state = model.state_dict()
             else:
@@ -168,6 +199,9 @@ def train_and_predict(
 
         model.load_state_dict(best_model_state)
         model.eval()
+
+        test_mse = compute_test_mse(model, test_loader, device)
+        print(f"Run {run+1} - Test regression MSE: {test_mse:.4f}")
 
         def predict_loader(loader):
             outputs = []
@@ -202,13 +236,10 @@ def run_acic(
     ratio=1.
 ):
     full_path = os.path.abspath(folder)
-    print(full_path)
     covariate_csv = os.path.join(full_path, 'raw', 'x.csv')
-    print(covariate_csv)
     x_raw = load_and_format_covariates(covariate_csv)
 
     simulation_dir = os.path.join(full_path, 'raw', 'train_scaling')
-    print(simulation_dir)
     simulation_files = sorted(glob.glob("{}/*".format(simulation_dir)))
 
     for simulation_file in simulation_files:
@@ -219,7 +250,7 @@ def run_acic(
 
         ufid = os.path.basename(simulation_file)[:-4]
         
-        """t, y, x = load_treatment_and_outcome(x_raw, simulation_file)
+        t, y, x = load_treatment_and_outcome(x_raw, simulation_file)
 
         for is_targeted_regularization in [True, False]:
             print("Is targeted regularization: {}".format(is_targeted_regularization))
@@ -246,7 +277,7 @@ def run_acic(
                 
             for num, output in enumerate(val_outputs):
                 np.savez_compressed(os.path.join(output_dir, "{}_val.npz".format(num)),
-                                    **output)"""
+                                    **output)
 
 #$env:KMP_DUPLICATE_LIB_OK="TRUE"
 
