@@ -19,6 +19,8 @@ def binary_classification_loss(concat_true, concat_pred):
     t_true = concat_true[:, 1]
     t_pred = concat_pred[:, 2]
 
+    t_pred = torch.clamp(t_pred, 1e-7, 1-1e-7)
+
     losst = F.binary_cross_entropy(
         t_pred,
         t_true,
@@ -41,6 +43,8 @@ def tarreg_loss(ratio, concat_true, concat_pred):
     y1_pred = concat_pred[:, 1]
     t_pred = concat_pred[:, 2]
     eps = concat_pred[:, 3]
+
+    t_pred = torch.clamp(t_pred, 1e-7, 1-1e-7)
 
     y_pred = t_true * y1_pred + (1 - t_true) * y0_pred
 
