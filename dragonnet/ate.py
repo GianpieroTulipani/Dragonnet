@@ -79,7 +79,7 @@ def load_data(
         npz_path
         ):
     
-    data = load(npz_path, f'{replication}_{split}.npz')
+    data = load(os.path.join(npz_path, f'{replication}_{split}.npz'))
     q_t0 = data['q_t0'].reshape(-1, 1)
     q_t1 = data['q_t1'].reshape(-1, 1)
     g = data['g'].reshape(-1, 1)
