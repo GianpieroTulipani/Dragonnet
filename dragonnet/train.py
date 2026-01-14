@@ -89,22 +89,18 @@ def train_and_predict(
     test_outputs = []
 
     for run in range(runs):
-        np.random.seed(run)
-        torch.manual_seed(run)
-        torch.cuda.manual_seed(run)
-        torch.cuda.manual_seed_all(run)
+        np.random.seed(42)
+        torch.manual_seed(42)
+        torch.cuda.manual_seed(42)
+        torch.cuda.manual_seed_all(42)
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
         num_workers=os.cpu_count()
         
-        t_trainval, t_test, y_trainval, y_test, x_trainval, x_test = train_test_split(t, y, x, test_size=val_split, random_state=run)
-        t_test = t_trainval
-        y_test = y_trainval
-        
-        t_train, t_val, y_train, y_val, x_train, x_val = train_test_split(t_trainval, y_trainval, x_trainval, test_size=val_split, random_state=run)
-        t_val = t_train
-        y_val = y_train
+        t_trainval, t_test, y_trainval, y_test, x_trainval, x_test = train_test_split(t, y, x, test_size=val_split, random_state=42)
+
+        t_train, t_val, y_train, y_val, x_train, x_val = train_test_split(t_trainval, y_trainval, x_trainval, test_size=val_split, random_state=42)
 
         train_dataset = DatasetACIC(x_train, t_train, y_train)
         val_dataset = DatasetACIC(x_val, t_val, y_val)
