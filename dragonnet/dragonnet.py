@@ -96,12 +96,6 @@ class Dragonnet(nn.Module):
             nn.Linear(rep_units, rep_units),
             nn.ELU(),
             nn.Linear(rep_units, rep_units),
-            nn.ELU(),
-            nn.Linear(rep_units, rep_units),
-            nn.ELU(),
-            nn.Linear(rep_units, rep_units),
-            nn.ELU(),
-            nn.Linear(rep_units, rep_units),
             nn.ELU()
         )
 
@@ -115,19 +109,11 @@ class Dragonnet(nn.Module):
             nn.ELU(),
             nn.Linear(head_units, head_units),
             nn.ELU(),
-            nn.Linear(head_units, head_units),
-            nn.ELU(),
-            nn.Linear(head_units, head_units),
-            nn.ELU(),
             nn.Linear(head_units, 1)
         )
 
         self.y1_head = nn.Sequential(
             nn.Linear(rep_units, head_units),
-            nn.ELU(),
-            nn.Linear(head_units, head_units),
-            nn.ELU(),
-            nn.Linear(head_units, head_units),
             nn.ELU(),
             nn.Linear(head_units, head_units),
             nn.ELU(),
