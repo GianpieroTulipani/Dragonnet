@@ -82,7 +82,7 @@ class EpsilonLayer(nn.Module):
         return self.epsilon.expand_as(t_pred)
 
 class Dragonnet(nn.Module):
-    def __init__(self, input_dim, rep_units=512, head_units=256):
+    def __init__(self, input_dim, rep_units=200, head_units=100):
         """
         input_dim: int, number of input covariates
         rep_units: int, number of units in shared representation layers
@@ -92,6 +92,12 @@ class Dragonnet(nn.Module):
 
         self.rep = nn.Sequential(
             nn.Linear(input_dim, rep_units),
+            nn.ELU(),
+            nn.Linear(rep_units, rep_units),
+            nn.ELU(),
+            nn.Linear(rep_units, rep_units),
+            nn.ELU(),
+            nn.Linear(rep_units, rep_units),
             nn.ELU(),
             nn.Linear(rep_units, rep_units),
             nn.ELU(),
@@ -109,10 +115,18 @@ class Dragonnet(nn.Module):
             nn.ELU(),
             nn.Linear(head_units, head_units),
             nn.ELU(),
+            nn.Linear(rep_units, head_units),
+            nn.ELU(),
+            nn.Linear(head_units, head_units),
+            nn.ELU(),
             nn.Linear(head_units, 1)
         )
 
         self.y1_head = nn.Sequential(
+            nn.Linear(rep_units, head_units),
+            nn.ELU(),
+            nn.Linear(head_units, head_units),
+            nn.ELU(),
             nn.Linear(rep_units, head_units),
             nn.ELU(),
             nn.Linear(head_units, head_units),
