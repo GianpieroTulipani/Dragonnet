@@ -9,7 +9,6 @@ from torch.utils.data import DataLoader
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
-from .ate import psi_naive
 
 import torch._dynamo
 torch._dynamo.config.suppress_errors = True
@@ -72,7 +71,7 @@ def train_and_predict(
         targeted_regularization=True,
         ratio=1.,
         val_split=0,
-        batch_size=128,
+        batch_size=512,
         num_epochs=100,
         patience=10,
         runs=1,
@@ -100,9 +99,12 @@ def train_and_predict(
         num_workers=os.cpu_count()
         
         t_trainval, t_test, y_trainval, y_test, x_trainval, x_test = train_test_split(t, y, x, test_size=val_split, random_state=run)
-        t_test = t_trainval , y_test = y_trainval
+        t_test = t_trainval
+        y_test = y_trainval
+        
         t_train, t_val, y_train, y_val, x_train, x_val = train_test_split(t_trainval, y_trainval, x_trainval, test_size=val_split, random_state=run)
-        t_val = t_train , y_val = y_train
+        t_val = t_train
+        y_val = y_train
 
         train_dataset = DatasetACIC(x_train, t_train, y_train)
         val_dataset = DatasetACIC(x_val, t_val, y_val)
