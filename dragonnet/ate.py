@@ -24,7 +24,7 @@ def truncate_all_by_g(q_t0, q_t1, g, t, y, truncate_level=0.05):
 
     return q_t0, q_t1, g, t, y
 
-def psi_naive(q_t0, q_t1, g, t, y, truncate_level):
+def psi_naive(q_t0, q_t1, g, truncate_level):
     ite = (q_t1 - q_t0)
     return np.mean(truncate_by_g(ite, g, level=truncate_level))
 
@@ -54,7 +54,7 @@ def psi_tmle_cont_outcome(q_t0, q_t1, g, t, y, eps_hat=None, truncate_level=0.05
     return psi_tmle, psi_tmle_std, eps_hat, initial_loss, final_loss, g_loss
 
 def get_estimate(q_t0, q_t1, g, t, y_dragon, truncate_level=0.01):
-    psi_n = psi_naive(q_t0, q_t1, g, t, y_dragon, truncate_level=truncate_level)
+    psi_n = psi_naive(q_t0, q_t1, g, truncate_level=truncate_level)
     psi_tmle, psi_tmle_std, eps_hat, initial_loss, final_loss, g_loss = psi_tmle_cont_outcome(q_t0, q_t1, g, t,
                                                                                               y_dragon,
                                                                                               truncate_level=truncate_level)
@@ -136,6 +136,8 @@ def ate(folder, split):
             ufid_simple[j] = err
             ufid_tmle[j] = tmle_err
 
+        print(f'ufid_simple: {ufid_simple}')
+        print(f'ufid_tmle: {ufid_tmle}')
         dict[model] = ufid_simple.mean()
         tmle_dict[model] = ufid_tmle.mean()
 
