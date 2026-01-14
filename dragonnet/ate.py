@@ -120,30 +120,21 @@ def ate(folder, split):
                     q_t0, q_t1, g, t, y, truncate_level=0.01
                 )
 
-                #print(f"  Rep {rep}")
-                #print(f"    psi_n (naive ATE): {psi_n:.6f}")
-                #print(f"    psi_tmle (TMLE ATE): {psi_tmle:.6f}")
-
                 all_psi_n.append(psi_n)
                 all_psi_tmle.append(psi_tmle)
 
             err = abs(np.nanmean(all_psi_n) - ground_truth)
             tmle_err = abs(np.nanmean(all_psi_tmle) - ground_truth)
 
-            #print(f"  Naive abs error: {err:.6f}")
-            #print(f"  TMLE abs error: {tmle_err:.6f}")
-
             ufid_simple[j] = err
             ufid_tmle[j] = tmle_err
 
-        print(f'ufid_simple: {ufid_simple}')
-        print(f'ufid_tmle: {ufid_tmle}')
+        print(f'ufid_simple: {ufid_simple}\n')
+        print(f'ufid_tmle: {ufid_tmle}\n')
+
         dict[model] = ufid_simple.mean()
         tmle_dict[model] = ufid_tmle.mean()
 
-        #print(f"\nModel summary ({model})")
-        #print(f"  Mean naive abs error: {dict[model]:.6f}")
-        #print(f"  Mean TMLE abs error: {tmle_dict[model]:.6f}")
 
     return dict, tmle_dict
 
