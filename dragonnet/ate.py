@@ -70,7 +70,7 @@ def load_truth(scaling_path, ufid):
         y0 = df['y0'].values
         y1 = df['y1'].values
 
-        diff = y1 - y0
+        diff = np.abs(y1 - y0)
         return np.mean(diff)
 
 def load_data(
@@ -79,7 +79,7 @@ def load_data(
         npz_path
         ):
     
-    data = load(npz_path + '{}_{}.npz'.format(replication, split))
+    data = load(npz_path, '{}_{}.npz'.format(replication, split))
     q_t0 = data['q_t0'].reshape(-1, 1)
     q_t1 = data['q_t1'].reshape(-1, 1)
     g = data['g'].reshape(-1, 1)
@@ -96,35 +96,52 @@ def ate(folder, split):
     dict = defaultdict(float)
     tmle_dict = defaultdict(float)
 
-    ufids = sorted(glob.glob("{}/*".format(processed_path)))
+    ufids = sorted(glob.glob(f"{processed_path}/*"))
     for model in ['baseline', 'targeted_regularization']:
+        print(f"\n===== Model: {model} =====")
+
         ufid_simple = pd.Series(np.zeros(len(ufids)))
         ufid_tmle = pd.Series(np.zeros(len(ufids)))
-        for j in range(len(ufids)):
-            ufid = os.path.basename(ufids[j])
 
+        for j, ufid_path in enumerate(ufids):
+            ufid = os.path.basename(ufid_path)
             npz_path = os.path.join(processed_path, ufid, model)
 
             ground_truth = load_truth(scaling_path, ufid)
-            print(ground_truth)
+            print(f"\nUFID: {ufid}")
+            print(f"  Ground truth ATE: {ground_truth:.6f}")
 
             all_psi_n, all_psi_tmle = [], []
+
             for rep in range(1):
                 q_t0, q_t1, g, t, y = load_data(split, rep, npz_path)
 
-                psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(q_t0, q_t1, g, t, y,
-                                                                    truncate_level=0.01)
+                psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(
+                    q_t0, q_t1, g, t, y, truncate_level=0.01
+                )
+
+                print(f"  Rep {rep}")
+                print(f"    psi_n (naive ATE): {psi_n:.6f}")
+                print(f"    psi_tmle (TMLE ATE): {psi_tmle:.6f}")
+
                 all_psi_n.append(psi_n)
                 all_psi_tmle.append(psi_tmle)
 
             err = abs(np.nanmean(all_psi_n) - ground_truth)
             tmle_err = abs(np.nanmean(all_psi_tmle) - ground_truth)
 
+            print(f"  Naive abs error: {err:.6f}")
+            print(f"  TMLE abs error: {tmle_err:.6f}")
+
             ufid_simple[j] = err
             ufid_tmle[j] = tmle_err
 
         dict[model] = ufid_simple.mean()
         tmle_dict[model] = ufid_tmle.mean()
+
+        print(f"\nModel summary ({model})")
+        print(f"  Mean naive abs error: {dict[model]:.6f}")
+        print(f"  Mean TMLE abs error: {tmle_dict[model]:.6f}")
 
     return dict, tmle_dict
 
