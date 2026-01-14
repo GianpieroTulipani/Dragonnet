@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
+from .ate import psi_naive
 
 import torch._dynamo
 torch._dynamo.config.suppress_errors = True
@@ -63,6 +64,7 @@ def compute_test_mse(model, loader, device):
 
     return total_mse / total_samples
 
+
 def train_and_predict(
         t,
         y_unscaled,
@@ -70,9 +72,9 @@ def train_and_predict(
         targeted_regularization=True,
         ratio=1.,
         val_split=0.2,
-        batch_size=512,
-        num_epochs=300,
-        patience=20,
+        batch_size=128,
+        num_epochs=100,
+        patience=10,
         runs=1,
         device=None
 ):
@@ -113,8 +115,7 @@ def train_and_predict(
 
         optimizer = torch.optim.Adam(
             model.parameters(),
-            lr=1e-3,
-            weight_decay=0.01
+            lr=1e-3
             )
 
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -135,7 +136,6 @@ def train_and_predict(
         for epoch in range(num_epochs):
             model.train()
             train_samples = 0
-            train_mse = 0.0
             train_loss = 0.0
 
             for x_batch, y_batch, t_batch in tqdm(train_loader, desc=f"Run {run + 1}, Epoch {epoch+1}", leave=False):
@@ -149,7 +149,6 @@ def train_and_predict(
                 concat_true = torch.cat([y_batch, t_batch], dim=1)
 
                 loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
-                mse = regression_loss(concat_true, concat_pred)
                 train_samples += x_batch.size(0)
 
                 loss.backward()
@@ -157,18 +156,18 @@ def train_and_predict(
                 optimizer.step()
 
                 train_loss += loss.item()
-                train_mse += mse.item()
             
             avg_train_loss = train_loss / train_samples
-            avg_train_mse = train_mse / train_samples
             current_lr = optimizer.param_groups[0]['lr']
 
-            print(f"Epoch {epoch+1} - Average train loss per sample: {avg_train_loss:.4f}, Average mse per sample: {avg_train_mse:.4f},  LR = {current_lr:.2e}")
+            print(f"Epoch {epoch+1} - Average train loss per sample: {avg_train_loss:.4f}, LR = {current_lr:.2e}")
 
             model.eval()
-            val_mse=0.0
             val_loss=0.0
             val_samples = 0
+
+            #q_t0_list = []
+            #q_t1_list = []
 
             with torch.no_grad():
                 for x_batch, y_batch, t_batch in tqdm(val_loader, desc=f"Run {run+1} Epoch {epoch+1} Val", leave=False):
@@ -177,18 +176,28 @@ def train_and_predict(
                     t_batch = t_batch.to(device)
 
                     concat_pred = model(x_batch)
-                    concat_true = torch.cat([y_batch, t_batch], dim=1)
+                    #y0_pred = concat_pred[:, 0]
+                    #y1_pred = concat_pred[:, 1]
 
+                    #q_t0_list.append(y0_pred.cpu())
+                    #q_t1_list.append(y1_pred.cpu())
+
+                    concat_true = torch.cat([y_batch, t_batch], dim=1)
                     loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
-                    mse = regression_loss(concat_true, concat_pred)
-                    val_mse += mse.item()
+    
                     val_loss += loss.item()
                     val_samples += x_batch.size(0)
                 
-            avg_val_loss = val_loss / val_samples
-            avg_val_mse = val_mse / val_samples
+            #q_t0 = torch.cat(q_t0_list, dim=0).numpy()
+            #q_t1 = torch.cat(q_t1_list, dim=0).numpy()
 
-            print(f"Epoch {epoch+1} - Average val loss per sample: {avg_val_loss:.4f}, Average val mse: {avg_val_mse:.4f}")
+            #ate_val = psi_naive(q_t0, q_t1, concat_pred[2], truncate_level=0.01)
+
+            #ate_error = abs(ate_val - true_ate)
+                
+            avg_val_loss = val_loss / val_samples
+
+            print(f"Epoch {epoch+1} - Average val loss per sample: {avg_val_loss:.4f}")
 
             scheduler.step(avg_val_loss)
             

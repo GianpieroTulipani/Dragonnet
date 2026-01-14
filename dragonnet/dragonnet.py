@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
-    
+
 def regression_loss(concat_true, concat_pred):
     y_true = concat_true[:, 0]
     t_true = concat_true[:, 1]
@@ -76,45 +76,57 @@ class DatasetACIC(Dataset):
 class EpsilonLayer(nn.Module):
     def __init__(self):
         super().__init__()
-        self.epsilon = nn.Parameter(torch.randn(1,1), requires_grad=True)
-
+        self.epsilon = nn.Parameter(torch.randn(1, 1), requires_grad=True)
 
     def forward(self, t_pred):
         return self.epsilon.expand_as(t_pred)
-    
-    
+
 class Dragonnet(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, rep_units=256, head_units=128, dropout_p=0.2):
+        """
+        input_dim: int, number of input covariates
+        rep_units: int, number of units in shared representation layers
+        head_units: int, number of units in outcome heads
+        dropout_p: float, dropout probability
+        """
         super().__init__()
+        self.dropout_p = dropout_p
 
         self.rep = nn.Sequential(
-            nn.Linear(input_dim, 200),
+            nn.Linear(input_dim, rep_units),
             nn.ELU(),
-            nn.Linear(200, 200),
+            nn.Dropout(p=self.dropout_p),
+            nn.Linear(rep_units, rep_units),
             nn.ELU(),
-            nn.Linear(200, 200),
-            nn.ELU()
+            nn.Dropout(p=self.dropout_p),
+            nn.Linear(rep_units, rep_units),
+            nn.ELU(),
+            nn.Dropout(p=self.dropout_p)
         )
 
         self.t_head = nn.Sequential(
-            nn.Linear(200, 1),
+            nn.Linear(rep_units, 1),
             nn.Sigmoid()
         )
 
         self.y0_head = nn.Sequential(
-            nn.Linear(200, 100),
+            nn.Linear(rep_units, head_units),
             nn.ELU(),
-            nn.Linear(100, 100),
+            nn.Dropout(p=self.dropout_p),
+            nn.Linear(head_units, head_units),
             nn.ELU(),
-            nn.Linear(100, 1)
+            nn.Dropout(p=self.dropout_p),
+            nn.Linear(head_units, 1)
         )
 
         self.y1_head = nn.Sequential(
-            nn.Linear(200, 100),
+            nn.Linear(rep_units, head_units),
             nn.ELU(),
-            nn.Linear(100, 100),
+            nn.Dropout(p=self.dropout_p),
+            nn.Linear(head_units, head_units),
             nn.ELU(),
-            nn.Linear(100, 1)
+            nn.Dropout(p=self.dropout_p),
+            nn.Linear(head_units, 1)
         )
 
         self.epsilon_layer = EpsilonLayer()
@@ -129,5 +141,4 @@ class Dragonnet(nn.Module):
         eps = self.epsilon_layer(t_pred)
 
         concat_pred = torch.cat([y0_pred, y1_pred, t_pred, eps], dim=1)
-
         return concat_pred
