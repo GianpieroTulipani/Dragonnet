@@ -27,6 +27,7 @@ def regression_loss(concat_true, concat_pred, delta=1.0):
     loss0 = huber((1 - t_true) * y0_pred, (1 - t_true) * y_true)
     loss1 = huber(t_true * y1_pred, t_true * y_true)
     return loss0 + loss1
+
 def binary_classification_loss(concat_true, concat_pred):
     t_true = concat_true[:, 1]
     t_pred = concat_pred[:, 2]
@@ -92,73 +93,6 @@ class EpsilonLayer(nn.Module):
 
     def forward(self, t_pred):
         return self.epsilon.expand_as(t_pred)
-
-"""class Dragonnet(nn.Module):
-    def __init__(self, input_dim, rep_units=256, head_units=128, dropout=0.1):
-        super().__init__()
-
-        # Shared representation with LayerNorm + GELU + Dropout
-        self.rep = nn.Sequential(
-            nn.Linear(input_dim, rep_units),
-            nn.LayerNorm(rep_units),
-            nn.GELU(),
-            nn.Dropout(dropout),
-
-            nn.Linear(rep_units, rep_units),
-            nn.LayerNorm(rep_units),
-            nn.GELU(),
-            nn.Dropout(dropout),
-
-            nn.Linear(rep_units, rep_units),
-            nn.LayerNorm(rep_units),
-            nn.GELU(),
-            nn.Dropout(dropout),
-
-            nn.Linear(rep_units, rep_units),
-            nn.LayerNorm(rep_units),
-            nn.GELU(),
-            nn.Dropout(dropout)
-        )
-
-        # Treatment head
-        self.t_head = nn.Sequential(
-            nn.Linear(rep_units, 1),
-            nn.Sigmoid()
-        )
-
-        # Outcome heads
-        def make_outcome_head():
-            return nn.Sequential(
-                nn.Linear(rep_units, head_units),
-                nn.LayerNorm(head_units),
-                nn.GELU(),
-                nn.Dropout(dropout),
-                
-                nn.Linear(head_units, head_units),
-                nn.LayerNorm(head_units),
-                nn.GELU(),
-                nn.Dropout(dropout),
-
-                nn.Linear(head_units, 1)
-            )
-
-        self.y0_head = make_outcome_head()
-        self.y1_head = make_outcome_head()
-
-        # Epsilon for targeted regularization
-        self.epsilon_layer = EpsilonLayer()
-
-    def forward(self, x):
-        x = self.rep(x)
-
-        t_pred = self.t_head(x)
-        y0_pred = self.y0_head(x)
-        y1_pred = self.y1_head(x)
-
-        eps = self.epsilon_layer(t_pred)
-
-        concat_pred = torch.cat([y0_pred, y1_pred, t_pred, eps], dim=1)
-        return concat_pred"""
     
 class Dragonnet(nn.Module):
     def __init__(self, input_dim, rep_units=200, head_units=100):
@@ -174,7 +108,7 @@ class Dragonnet(nn.Module):
         )
 
         self.t_head = nn.Sequential(
-            nn.Linear(rep_units, 1),
+            nn.Linear(input_dim, 1),
             nn.Sigmoid()
         )
 
