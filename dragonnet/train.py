@@ -115,7 +115,7 @@ def train_and_predict(
 
         optimizer = torch.optim.Adam(
             model.parameters(),
-            lr=1e-3,
+            lr=1e-4,
             weight_decay=0.01
             )
 
@@ -153,7 +153,7 @@ def train_and_predict(
                 train_samples += x_batch.size(0)
 
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.5)
                 optimizer.step()
 
                 train_loss += loss.item()
