@@ -93,14 +93,8 @@ class EpsilonLayer(nn.Module):
     def forward(self, t_pred):
         return self.epsilon.expand_as(t_pred)
 
-class Dragonnet(nn.Module):
+"""class Dragonnet(nn.Module):
     def __init__(self, input_dim, rep_units=256, head_units=128, dropout=0.1):
-        """
-        input_dim: number of input covariates
-        rep_units: units in shared representation layers
-        head_units: units in outcome heads
-        dropout: dropout rate for regularization
-        """
         super().__init__()
 
         # Shared representation with LayerNorm + GELU + Dropout
@@ -164,9 +158,9 @@ class Dragonnet(nn.Module):
         eps = self.epsilon_layer(t_pred)
 
         concat_pred = torch.cat([y0_pred, y1_pred, t_pred, eps], dim=1)
-        return concat_pred
+        return concat_pred"""
     
-"""class Dragonnet(nn.Module):
+class Dragonnet(nn.Module):
     def __init__(self, input_dim, rep_units=200, head_units=100):
         super().__init__()
 
@@ -212,4 +206,4 @@ class Dragonnet(nn.Module):
         eps = self.epsilon_layer(t_pred)
 
         concat_pred = torch.cat([y0_pred, y1_pred, t_pred, eps], dim=1)
-        return concat_pred"""
+        return concat_pred
