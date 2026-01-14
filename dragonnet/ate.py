@@ -98,7 +98,7 @@ def ate(folder, split):
 
     ufids = sorted(glob.glob(f"{processed_path}/*"))
     for model in ['baseline', 'targeted_regularization']:
-        print(f"\n===== Model: {model} =====")
+        #print(f"\n===== Model: {model} =====")
 
         ufid_simple = pd.Series(np.zeros(len(ufids)))
         ufid_tmle = pd.Series(np.zeros(len(ufids)))
@@ -108,8 +108,8 @@ def ate(folder, split):
             npz_path = os.path.join(processed_path, ufid, model)
 
             ground_truth = load_truth(scaling_path, ufid)
-            print(f"\nUFID: {ufid}")
-            print(f"  Ground truth ATE: {ground_truth:.6f}")
+            #print(f"\nUFID: {ufid}")
+            #print(f"  Ground truth ATE: {ground_truth:.6f}")
 
             all_psi_n, all_psi_tmle = [], []
 
@@ -120,9 +120,9 @@ def ate(folder, split):
                     q_t0, q_t1, g, t, y, truncate_level=0.01
                 )
 
-                print(f"  Rep {rep}")
-                print(f"    psi_n (naive ATE): {psi_n:.6f}")
-                print(f"    psi_tmle (TMLE ATE): {psi_tmle:.6f}")
+                #print(f"  Rep {rep}")
+                #print(f"    psi_n (naive ATE): {psi_n:.6f}")
+                #print(f"    psi_tmle (TMLE ATE): {psi_tmle:.6f}")
 
                 all_psi_n.append(psi_n)
                 all_psi_tmle.append(psi_tmle)
@@ -130,8 +130,8 @@ def ate(folder, split):
             err = abs(np.nanmean(all_psi_n) - ground_truth)
             tmle_err = abs(np.nanmean(all_psi_tmle) - ground_truth)
 
-            print(f"  Naive abs error: {err:.6f}")
-            print(f"  TMLE abs error: {tmle_err:.6f}")
+            #print(f"  Naive abs error: {err:.6f}")
+            #print(f"  TMLE abs error: {tmle_err:.6f}")
 
             ufid_simple[j] = err
             ufid_tmle[j] = tmle_err
@@ -139,9 +139,9 @@ def ate(folder, split):
         dict[model] = ufid_simple.mean()
         tmle_dict[model] = ufid_tmle.mean()
 
-        print(f"\nModel summary ({model})")
-        print(f"  Mean naive abs error: {dict[model]:.6f}")
-        print(f"  Mean TMLE abs error: {tmle_dict[model]:.6f}")
+        #print(f"\nModel summary ({model})")
+        #print(f"  Mean naive abs error: {dict[model]:.6f}")
+        #print(f"  Mean TMLE abs error: {tmle_dict[model]:.6f}")
 
     return dict, tmle_dict
 

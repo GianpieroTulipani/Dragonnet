@@ -72,7 +72,7 @@ def train_and_predict(
         val_split=0.2,
         batch_size=512,
         num_epochs=300,
-        patience=40,
+        patience=20,
         runs=1,
         device=None
 ):
@@ -219,10 +219,6 @@ def train_and_predict(
         yt_hat_val = predict_loader(val_loader)
         yt_hat_test = predict_loader(test_loader)
 
-        print(yt_hat_test)
-        print(yt_hat_train)
-        print(yt_hat_val)
-
         train_outputs.append(_split_output(
             yt_hat_train.cpu().numpy(), t_train, y_train, y_scaler, x_train)
         )
@@ -288,8 +284,6 @@ def run_acic(
             for num, output in enumerate(val_outputs):
                 np.savez_compressed(os.path.join(output_dir, "{}_val.npz".format(num)),
                                     **output)
-        
-        break
 
 #$env:KMP_DUPLICATE_LIB_OK="TRUE"
 if __name__ == '__main__':
