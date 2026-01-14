@@ -70,7 +70,7 @@ def load_truth(scaling_path, ufid):
         y0 = df['y0'].values
         y1 = df['y1'].values
 
-        diff = np.abs(y1 - y0)
+        diff = y1 - y0
         return np.mean(diff)
 
 def load_data(
