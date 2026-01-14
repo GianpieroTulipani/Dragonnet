@@ -115,7 +115,8 @@ def train_and_predict(
 
         optimizer = torch.optim.Adam(
             model.parameters(),
-            lr=1e-3
+            lr=1e-3,
+            weight_decay=0.01
             )
 
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -166,9 +167,6 @@ def train_and_predict(
             val_loss=0.0
             val_samples = 0
 
-            #q_t0_list = []
-            #q_t1_list = []
-
             with torch.no_grad():
                 for x_batch, y_batch, t_batch in tqdm(val_loader, desc=f"Run {run+1} Epoch {epoch+1} Val", leave=False):
                     x_batch = x_batch.to(device)
@@ -176,24 +174,12 @@ def train_and_predict(
                     t_batch = t_batch.to(device)
 
                     concat_pred = model(x_batch)
-                    #y0_pred = concat_pred[:, 0]
-                    #y1_pred = concat_pred[:, 1]
-
-                    #q_t0_list.append(y0_pred.cpu())
-                    #q_t1_list.append(y1_pred.cpu())
 
                     concat_true = torch.cat([y_batch, t_batch], dim=1)
                     loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
     
                     val_loss += loss.item()
                     val_samples += x_batch.size(0)
-                
-            #q_t0 = torch.cat(q_t0_list, dim=0).numpy()
-            #q_t1 = torch.cat(q_t1_list, dim=0).numpy()
-
-            #ate_val = psi_naive(q_t0, q_t1, concat_pred[2], truncate_level=0.01)
-
-            #ate_error = abs(ate_val - true_ate)
                 
             avg_val_loss = val_loss / val_samples
 
