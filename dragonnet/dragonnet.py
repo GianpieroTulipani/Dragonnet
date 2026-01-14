@@ -82,26 +82,21 @@ class EpsilonLayer(nn.Module):
         return self.epsilon.expand_as(t_pred)
 
 class Dragonnet(nn.Module):
-    def __init__(self, input_dim, rep_units=256, head_units=128, dropout_p=0.2):
+    def __init__(self, input_dim, rep_units=512, head_units=256):
         """
         input_dim: int, number of input covariates
         rep_units: int, number of units in shared representation layers
         head_units: int, number of units in outcome heads
-        dropout_p: float, dropout probability
         """
         super().__init__()
-        self.dropout_p = dropout_p
 
         self.rep = nn.Sequential(
             nn.Linear(input_dim, rep_units),
             nn.ELU(),
-            nn.Dropout(p=self.dropout_p),
             nn.Linear(rep_units, rep_units),
             nn.ELU(),
-            nn.Dropout(p=self.dropout_p),
             nn.Linear(rep_units, rep_units),
-            nn.ELU(),
-            nn.Dropout(p=self.dropout_p)
+            nn.ELU()
         )
 
         self.t_head = nn.Sequential(
@@ -112,20 +107,16 @@ class Dragonnet(nn.Module):
         self.y0_head = nn.Sequential(
             nn.Linear(rep_units, head_units),
             nn.ELU(),
-            nn.Dropout(p=self.dropout_p),
             nn.Linear(head_units, head_units),
             nn.ELU(),
-            nn.Dropout(p=self.dropout_p),
             nn.Linear(head_units, 1)
         )
 
         self.y1_head = nn.Sequential(
             nn.Linear(rep_units, head_units),
             nn.ELU(),
-            nn.Dropout(p=self.dropout_p),
             nn.Linear(head_units, head_units),
             nn.ELU(),
-            nn.Dropout(p=self.dropout_p),
             nn.Linear(head_units, 1)
         )
 
