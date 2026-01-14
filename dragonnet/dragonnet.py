@@ -108,7 +108,7 @@ class Dragonnet(nn.Module):
         )
 
         self.t_head = nn.Sequential(
-            nn.Linear(input_dim, 1),
+            nn.Linear(rep_units, 1),
             nn.Sigmoid()
         )
 
@@ -133,7 +133,7 @@ class Dragonnet(nn.Module):
     def forward(self, input):
         x = self.rep(input)
 
-        t_pred = self.t_head(input)
+        t_pred = self.t_head(x)
         y0_pred = self.y0_head(x)
         y1_pred = self.y1_head(x)
 
