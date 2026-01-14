@@ -196,10 +196,10 @@ class Dragonnet(nn.Module):
 
         self.epsilon_layer = EpsilonLayer()
 
-    def forward(self, x):
-        x = self.rep(x)
+    def forward(self, input):
+        x = self.rep(input)
 
-        t_pred = self.t_head(x)
+        t_pred = self.t_head(input)
         y0_pred = self.y0_head(x)
         y1_pred = self.y1_head(x)
 
