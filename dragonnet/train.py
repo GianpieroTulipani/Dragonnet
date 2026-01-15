@@ -8,7 +8,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss
+from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss_huber
 
 import torch._dynamo
 torch._dynamo.config.suppress_errors = True
@@ -57,7 +57,7 @@ def compute_test_mse(model, loader, device):
             concat_pred = model(x_batch)
             concat_true = torch.cat([y_batch, t_batch], dim=1)
 
-            mse = regression_loss(concat_true, concat_pred)
+            mse = regression_loss_huber(concat_true, concat_pred)
             total_mse += mse.item()
             total_samples += x_batch.size(0)
 
@@ -89,18 +89,18 @@ def train_and_predict(
     test_outputs = []
 
     for run in range(runs):
-        np.random.seed(run)
-        torch.manual_seed(run)
-        torch.cuda.manual_seed(run)
-        torch.cuda.manual_seed_all(run)
+        np.random.seed(42)
+        torch.manual_seed(42)
+        torch.cuda.manual_seed(42)
+        torch.cuda.manual_seed_all(42)
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
         num_workers=os.cpu_count()
         
-        t_trainval, t_test, y_trainval, y_test, x_trainval, x_test = train_test_split(t, y, x, test_size=val_split, random_state=run)
+        t_trainval, t_test, y_trainval, y_test, x_trainval, x_test = train_test_split(t, y, x, test_size=val_split, random_state=42)
 
-        t_train, t_val, y_train, y_val, x_train, x_val = train_test_split(t_trainval, y_trainval, x_trainval, test_size=val_split, random_state=run)
+        t_train, t_val, y_train, y_val, x_train, x_val = train_test_split(t_trainval, y_trainval, x_trainval, test_size=val_split, random_state=42)
 
         train_dataset = DatasetACIC(x_train, t_train, y_train)
         val_dataset = DatasetACIC(x_val, t_val, y_val)
@@ -115,7 +115,7 @@ def train_and_predict(
 
         optimizer = torch.optim.Adam(
             model.parameters(),
-            lr=1e-4,
+            lr=1e-3,
             weight_decay=0.01
             )
 
