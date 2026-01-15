@@ -3,7 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 
-"""def regression_loss(concat_true, concat_pred):
+#DOMANI TESTA SE LA REGRESSION_LOSS DI HUBER/ IL LEARNIGN RATE A 1E-4 O IL CPLIPPING A 0.5, PER CAPIRE CHI HA IMPATTATO SULLA RIDUZIONE DEL MAE
+#RIAPPLICA QUEGLI SCALING SU T-PRED FORSE EVITAVANO FORTI INSTABILITA
+def regression_loss(concat_true, concat_pred):
     y_true = concat_true[:, 0]
     t_true = concat_true[:, 1]
 
@@ -13,9 +15,9 @@ from torch.utils.data import Dataset
     loss0 = torch.sum((1. - t_true) * torch.square(y_true - y0_pred))
     loss1 = torch.sum(t_true * torch.square(y_true - y1_pred))
 
-    return loss0 + loss1"""
+    return loss0 + loss1
 
-def regression_loss(concat_true, concat_pred, delta=1.0):
+"""def regression_loss(concat_true, concat_pred, delta=1.0):
     y_true = concat_true[:, 0]
     t_true = concat_true[:, 1]
 
@@ -26,7 +28,7 @@ def regression_loss(concat_true, concat_pred, delta=1.0):
 
     loss0 = huber((1 - t_true) * y0_pred, (1 - t_true) * y_true)
     loss1 = huber(t_true * y1_pred, t_true * y_true)
-    return loss0 + loss1
+    return loss0 + loss1"""
 
 def binary_classification_loss(concat_true, concat_pred):
     t_true = concat_true[:, 1]
