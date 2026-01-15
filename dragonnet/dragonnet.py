@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 
-#DOMANI TESTA SE LA REGRESSION_LOSS DI HUBER/ IL LEARNIGN RATE A 1E-4 O IL CPLIPPING A 0.5, PER CAPIRE CHI HA IMPATTATO SULLA RIDUZIONE DEL MAE
-#RIAPPLICA QUEGLI SCALING SU T-PRED FORSE EVITAVANO FORTI INSTABILITA
 """def regression_loss(concat_true, concat_pred):
     y_true = concat_true[:, 0]
     t_true = concat_true[:, 1]
