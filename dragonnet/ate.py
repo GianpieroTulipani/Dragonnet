@@ -75,11 +75,10 @@ def load_truth(scaling_path, ufid):
 
 def load_data(
         split,
-        replication,
         npz_path
         ):
     
-    data = load(os.path.join(npz_path, f'{replication}_{split}.npz'))
+    data = load(os.path.join(npz_path, f'{split}.npz'))
     q_t0 = data['q_t0'].reshape(-1, 1)
     q_t1 = data['q_t1'].reshape(-1, 1)
     g = data['g'].reshape(-1, 1)
@@ -98,7 +97,6 @@ def ate(folder, split):
 
     ufids = sorted(glob.glob(f"{processed_path}/*"))
     for model in ['baseline', 'targeted_regularization']:
-        #print(f"\n===== Model: {model} =====")
 
         ufid_simple = pd.Series(np.zeros(len(ufids)))
         ufid_tmle = pd.Series(np.zeros(len(ufids)))
@@ -108,23 +106,15 @@ def ate(folder, split):
             npz_path = os.path.join(processed_path, ufid, model)
 
             ground_truth = load_truth(scaling_path, ufid)
-            #print(f"\nUFID: {ufid}")
-            #print(f"  Ground truth ATE: {ground_truth:.6f}")
 
-            all_psi_n, all_psi_tmle = [], []
+            q_t0, q_t1, g, t, y = load_data(split, npz_path)
 
-            for rep in range(1):
-                q_t0, q_t1, g, t, y = load_data(split, rep, npz_path)
+            psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(
+                q_t0, q_t1, g, t, y, truncate_level=0.01
+            )
 
-                psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(
-                    q_t0, q_t1, g, t, y, truncate_level=0.01
-                )
-
-                all_psi_n.append(psi_n)
-                all_psi_tmle.append(psi_tmle)
-
-            err = abs(np.nanmean(all_psi_n) - ground_truth)
-            tmle_err = abs(np.nanmean(all_psi_tmle) - ground_truth)
+            err = abs(psi_n - ground_truth)
+            tmle_err = abs(psi_tmle - ground_truth)
 
             ufid_simple[j] = err
             ufid_tmle[j] = tmle_err
@@ -134,7 +124,6 @@ def ate(folder, split):
 
         dict[model] = ufid_simple.mean()
         tmle_dict[model] = ufid_tmle.mean()
-
 
     return dict, tmle_dict
 
