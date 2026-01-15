@@ -48,7 +48,7 @@ def binary_classification_loss(concat_true, concat_pred):
     return losst
 
 def dragonnet_loss(concat_true, concat_pred):
-    return regression_loss(concat_true, concat_pred) + binary_classification_loss(concat_true, concat_pred)
+    return regression_loss_huber(concat_true, concat_pred) + binary_classification_loss(concat_true, concat_pred)
 
 
 def tarreg_loss(ratio, concat_true, concat_pred):
