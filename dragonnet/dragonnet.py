@@ -23,8 +23,6 @@ def binary_classification_loss(concat_true, concat_pred):
     t_true = concat_true[:, 1]
     t_pred = concat_pred[:, 2]
 
-    t_pred = torch.clamp(t_pred, 1e-9, 1 - 1e-9)
-
     losst = F.binary_cross_entropy(
         t_pred,
         t_true,
