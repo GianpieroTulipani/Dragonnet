@@ -128,9 +128,9 @@ def ate(folder, split):
         print(f'MAE results for model: {model}\n')
         print(f'mae_simple: {mae_simple}')
         print(f'mae_tmle: {mae_tmle}\n')
-        print('RSE results for model: {model}\n')
-        print(f'rse_simple: {rse_simple}')
-        print(f'rse_tmle: {rse_tmle}\n')
+        print('RMSE results for model: {model}\n')
+        print(f'rmse_simple: {rmse_simple}')
+        print(f'rmse_tmle: {rmse_tmle}\n')
         """
 
         mae_dict[model] = mae_simple.mean()
@@ -165,8 +165,8 @@ if __name__ == '__main__':
 
     print("Naive ATE metrics:")
     for k in mae_naive:
-        print(f"  {k} -> MAE: {mae_naive[k]:.4f}, RSE: {rmse_naive[k]:.4f}")
+        print(f"  {k} -> MAE: {mae_naive[k]:.4f}, RMSE: {rmse_naive[k]:.4f}")
 
     print("\nTMLE ATE metrics:")
     for k in mae_tmle:
-        print(f"  {k} -> MAE: {mae_tmle[k]:.4f}, RSE: {rmse_tmle[k]:.4f}")
+        print(f"  {k} -> MAE: {mae_tmle[k]:.4f}, RMSE: {rmse_tmle[k]:.4f}")
