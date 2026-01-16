@@ -114,7 +114,7 @@ def train_and_predict(
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=1e-4,
-        weight_decay=1e-3
+        weight_decay=1e-2
         )
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
