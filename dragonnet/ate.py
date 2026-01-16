@@ -159,12 +159,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    results_naive, results_tmle = ate(args.folder, args.split)
+    mae_naive, mae_tmle, rse_naive, rse_tmle = ate(args.folder, args.split)
 
-    print("Naive ATE error:")
-    for k, v in results_naive.items():
-        print(f"  {k}: {v:.4f}")
+    print("Naive ATE metrics:")
+    for k in mae_naive:
+        print(f"  {k} -> MAE: {mae_naive[k]:.4f}, RSE: {rse_naive[k]:.4f}")
 
-    print("\nTMLE ATE error:")
-    for k, v in results_tmle.items():
-        print(f"  {k}: {v:.4f}")
+    print("\nTMLE ATE metrics:")
+    for k in mae_tmle:
+        print(f"  {k} -> MAE: {mae_tmle[k]:.4f}, RSE: {rse_tmle[k]:.4f}")
+
+    
