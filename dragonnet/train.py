@@ -246,7 +246,7 @@ def run_acic(
 
         ufid = os.path.basename(simulation_file)[:-4]
 
-        print(f'Dataset num {i}, {ufid}\n')
+        print(f'Dataset num {i // 2}, {ufid}\n')
         
         t, y, x = load_treatment_and_outcome(x_raw, simulation_file)
 
