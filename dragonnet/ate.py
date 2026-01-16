@@ -99,30 +99,29 @@ def ate(folder, split):
     rmse_tmle_dict = defaultdict(float)
 
     ufids = sorted(glob.glob(f"{processed_path}/*"))
-    for model in ['baseline', 'targeted_regularization']:
 
-        mae_simple = pd.Series(np.zeros(len(ufids)))
-        rmse_simple = pd.Series(np.zeros(len(ufids)))
-        mae_tmle = pd.Series(np.zeros(len(ufids)))
-        rmse_tmle = pd.Series(np.zeros(len(ufids)))
+    mae_simple = pd.Series(np.zeros(len(ufids)))
+    rmse_simple = pd.Series(np.zeros(len(ufids)))
+    mae_tmle = pd.Series(np.zeros(len(ufids)))
+    rmse_tmle = pd.Series(np.zeros(len(ufids)))
 
-        for j, ufid_path in enumerate(ufids):
-            ufid = os.path.basename(ufid_path)
-            npz_path = os.path.join(processed_path, ufid, model)
+    for j, ufid_path in enumerate(ufids):
+        ufid = os.path.basename(ufid_path)
+        npz_path = os.path.join(processed_path, ufid, 'baseline')
 
-            ground_truth = load_truth(scaling_path, ufid)
+        ground_truth = load_truth(scaling_path, ufid)
 
-            q_t0, q_t1, g, t, y = load_data(split, npz_path)
+        q_t0, q_t1, g, t, y = load_data(split, npz_path)
 
-            psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(
-                q_t0, q_t1, g, t, y, truncate_level=0.01
-            )
+        psi_n, psi_tmle, initial_loss, final_loss, g_loss = get_estimate(
+            q_t0, q_t1, g, t, y, truncate_level=0.01
+        )
 
-            mae_simple[j] = abs(psi_n - ground_truth)
-            mae_tmle[j] = abs(psi_tmle - ground_truth)
+        mae_simple[j] = abs(psi_n - ground_truth)
+        mae_tmle[j] = abs(psi_tmle - ground_truth)
 
-            rmse_simple[j] = (psi_n - ground_truth)**2
-            rmse_tmle[j] = (psi_tmle - ground_truth)**2
+        rmse_simple[j] = (psi_n - ground_truth)**2
+        rmse_tmle[j] = (psi_tmle - ground_truth)**2
 
         """
         print(f'MAE results for model: {model}\n')
@@ -133,11 +132,11 @@ def ate(folder, split):
         print(f'rmse_tmle: {rmse_tmle}\n')
         """
 
-        mae_dict[model] = mae_simple.mean()
-        rmse_dict[model] = np.sqrt(rmse_simple.mean())
+        mae_dict['baseline'] = mae_simple.mean()
+        rmse_dict['baseline'] = np.sqrt(rmse_simple.mean())
 
-        mae_tmle_dict[model] = mae_tmle.mean()
-        rmse_tmle_dict[model] = np.sqrt(rmse_tmle.mean())
+        mae_tmle_dict['baseline'] = mae_tmle.mean()
+        rmse_tmle_dict['baseline'] = np.sqrt(rmse_tmle.mean())
 
     return mae_dict, mae_tmle_dict, rmse_dict, rmse_tmle_dict
 

@@ -8,7 +8,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, tarreg_loss, regression_loss_huber
+from .dragonnet import DatasetACIC, Dragonnet, dragonnet_loss, regression_loss_huber
 
 import torch._dynamo
 torch._dynamo.config.suppress_errors = True
@@ -68,7 +68,6 @@ def train_and_predict(
         t,
         y_unscaled,
         x,
-        targeted_regularization=True,
         ratio=1.,
         val_split=0,
         batch_size=512,
@@ -128,7 +127,7 @@ def train_and_predict(
         min_lr=0.0
     )
 
-    loss_fn = tarreg_loss if targeted_regularization else dragonnet_loss
+    loss_fn = dragonnet_loss
 
     best_val_loss = float('inf')
     epochs_no_improve = 0
@@ -148,7 +147,7 @@ def train_and_predict(
 
             concat_true = torch.cat([y_batch, t_batch], dim=1)
 
-            loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
+            loss = loss_fn(concat_true, concat_pred)
             train_samples += x_batch.size(0)
 
             loss.backward()
@@ -175,7 +174,7 @@ def train_and_predict(
                 concat_pred = model(x_batch)
 
                 concat_true = torch.cat([y_batch, t_batch], dim=1)
-                loss = loss_fn(ratio, concat_true, concat_pred) if targeted_regularization else loss_fn(concat_true, concat_pred)
+                loss = loss_fn(concat_true, concat_pred)
 
                 val_loss += loss.item()
                 val_samples += x_batch.size(0)
@@ -251,32 +250,26 @@ def run_acic(
         
         t, y, x = load_treatment_and_outcome(x_raw, simulation_file)
 
-        for is_targeted_regularization in [True, False]:
-            print("Is targeted regularization: {}".format(is_targeted_regularization))
+        train_outputs, val_outputs, test_outputs = train_and_predict(t, y, x,
+                                                                        ratio=ratio,
+                                                                        val_split=0.2,
+                                                                        batch_size=512
+                                                                        )
 
-            train_outputs, val_outputs, test_outputs = train_and_predict(t, y, x,        
-                                                                         targeted_regularization=is_targeted_regularization,
-                                                                         ratio=ratio,
-                                                                         val_split=0.2,
-                                                                         batch_size=512
-                                                                         )
-            if is_targeted_regularization:
-                output_dir = os.path.join(full_path, 'processed', ufid, "targeted_regularization")
-            else:
-                output_dir = os.path.join(full_path, 'processed', ufid, "baseline")
+        output_dir = os.path.join(full_path, 'processed', ufid, "baseline")
+        
+        os.makedirs(output_dir, exist_ok=True)
+        for num, output in enumerate(test_outputs):
+            np.savez_compressed(os.path.join(output_dir, "test.npz"),
+                                **output)
+        
+        for num, output in enumerate(train_outputs):
+            np.savez_compressed(os.path.join(output_dir, "train.npz"),
+                                **output)
             
-            os.makedirs(output_dir, exist_ok=True)
-            for num, output in enumerate(test_outputs):
-                np.savez_compressed(os.path.join(output_dir, "test.npz"),
-                                    **output)
-            
-            for num, output in enumerate(train_outputs):
-                np.savez_compressed(os.path.join(output_dir, "train.npz"),
-                                    **output)
-                
-            for num, output in enumerate(val_outputs):
-                np.savez_compressed(os.path.join(output_dir, "val.npz"),
-                                    **output)
+        for num, output in enumerate(val_outputs):
+            np.savez_compressed(os.path.join(output_dir, "val.npz"),
+                                **output)
 
 #$env:KMP_DUPLICATE_LIB_OK="TRUE"
 if __name__ == '__main__':

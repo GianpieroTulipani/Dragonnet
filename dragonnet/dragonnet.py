@@ -3,18 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 
-"""def regression_loss(concat_true, concat_pred):
-    y_true = concat_true[:, 0]
-    t_true = concat_true[:, 1]
-
-    y0_pred = concat_pred[:, 0]
-    y1_pred = concat_pred[:, 1]
-
-    loss0 = torch.sum((1. - t_true) * torch.square(y_true - y0_pred))
-    loss1 = torch.sum(t_true * torch.square(y_true - y1_pred))
-
-    return loss0 + loss1"""
-
 def regression_loss_huber(concat_true, concat_pred, delta=1.0):
     y_true = concat_true[:, 0]
     t_true = concat_true[:, 1]
@@ -48,31 +36,6 @@ def binary_classification_loss(concat_true, concat_pred):
 def dragonnet_loss(concat_true, concat_pred):
     return regression_loss_huber(concat_true, concat_pred) + binary_classification_loss(concat_true, concat_pred)
 
-
-def tarreg_loss(ratio, concat_true, concat_pred):
-    vanilla_loss = dragonnet_loss(concat_true, concat_pred)
-
-    y_true = concat_true[:, 0]
-    t_true = concat_true[:, 1]
-
-    y0_pred = concat_pred[:, 0]
-    y1_pred = concat_pred[:, 1]
-    t_pred = concat_pred[:, 2]
-
-    eps = concat_pred[:, 3]
-
-    t_pred = torch.clamp(t_pred, 1e-9, 1 - 1e-9)
-
-    y_pred = t_true * y1_pred + (1 - t_true) * y0_pred
-
-    h = t_true / t_pred - (1 - t_true) / (1 - t_pred)
-
-    y_pert = y_pred + eps * h
-
-    targeted_regularization = torch.sum((y_true - y_pert) ** 2)
-
-    loss = vanilla_loss + ratio * targeted_regularization
-    return loss
 
 class DatasetACIC(Dataset):
     def __init__(self, x, t, y):
