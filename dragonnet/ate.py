@@ -92,14 +92,19 @@ def ate(folder, split):
     scaling_path = os.path.join(full_path, 'raw', 'train_scaling')
     processed_path = os.path.join(full_path, 'processed')
 
-    dict = defaultdict(float)
-    tmle_dict = defaultdict(float)
+    mae_dict = defaultdict(float)
+    rse_dict = defaultdict(float)
+
+    mae_tmle_dict = defaultdict(float)
+    rse_tmle_dict = defaultdict(float)
 
     ufids = sorted(glob.glob(f"{processed_path}/*"))
     for model in ['baseline', 'targeted_regularization']:
 
-        ufid_simple = pd.Series(np.zeros(len(ufids)))
-        ufid_tmle = pd.Series(np.zeros(len(ufids)))
+        mae_simple = pd.Series(np.zeros(len(ufids)))
+        rse_simple = pd.Series(np.zeros(len(ufids)))
+        mae_tmle = pd.Series(np.zeros(len(ufids)))
+        rse_tmle = pd.Series(np.zeros(len(ufids)))
 
         for j, ufid_path in enumerate(ufids):
             ufid = os.path.basename(ufid_path)
@@ -113,19 +118,26 @@ def ate(folder, split):
                 q_t0, q_t1, g, t, y, truncate_level=0.01
             )
 
-            err = abs(psi_n - ground_truth)
-            tmle_err = abs(psi_tmle - ground_truth)
+            mae_simple[j] = abs(psi_n - ground_truth)
+            mae_tmle[j] = abs(psi_tmle - ground_truth)
 
-            ufid_simple[j] = err
-            ufid_tmle[j] = tmle_err
+            rse_simple[j] = ((psi_n - ground_truth)**2) / (ground_truth**2 + 1e-8)
+            rse_tmle[j] = ((psi_tmle - ground_truth)**2) / (ground_truth**2 + 1e-8)
 
-        print(f'ufid_simple: {ufid_simple}\n')
-        print(f'ufid_tmle: {ufid_tmle}\n')
+        print(f'MAE results for model: {model}\n')
+        print(f'mae_simple: {mae_simple}')
+        print(f'mae_tmle: {mae_tmle}\n')
+        print('RSE results for model: {model}\n')
+        print(f'rse_simple: {rse_simple}')
+        print(f'rse_tmle: {rse_tmle}\n')
 
-        dict[model] = ufid_simple.mean()
-        tmle_dict[model] = ufid_tmle.mean()
+        mae_dict[model] = mae_simple.mean()
+        rse_dict[model] = rse_simple.mean()
 
-    return dict, tmle_dict
+        mae_tmle_dict[model] = mae_tmle.mean()
+        rse_tmle_dict[model] = rse_tmle.mean()
+
+    return mae_dict, mae_tmle_dict, rse_dict, rse_tmle_dict
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Compute ATE estimates")
