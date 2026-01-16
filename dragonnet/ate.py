@@ -93,18 +93,18 @@ def ate(folder, split):
     processed_path = os.path.join(full_path, 'processed')
 
     mae_dict = defaultdict(float)
-    rse_dict = defaultdict(float)
+    rmse_dict = defaultdict(float)
 
     mae_tmle_dict = defaultdict(float)
-    rse_tmle_dict = defaultdict(float)
+    rmse_tmle_dict = defaultdict(float)
 
     ufids = sorted(glob.glob(f"{processed_path}/*"))
     for model in ['baseline', 'targeted_regularization']:
 
         mae_simple = pd.Series(np.zeros(len(ufids)))
-        rse_simple = pd.Series(np.zeros(len(ufids)))
+        rmse_simple = pd.Series(np.zeros(len(ufids)))
         mae_tmle = pd.Series(np.zeros(len(ufids)))
-        rse_tmle = pd.Series(np.zeros(len(ufids)))
+        rmse_tmle = pd.Series(np.zeros(len(ufids)))
 
         for j, ufid_path in enumerate(ufids):
             ufid = os.path.basename(ufid_path)
@@ -121,23 +121,25 @@ def ate(folder, split):
             mae_simple[j] = abs(psi_n - ground_truth)
             mae_tmle[j] = abs(psi_tmle - ground_truth)
 
-            rse_simple[j] = ((psi_n - ground_truth)**2) / (ground_truth**2 + 1e-8)
-            rse_tmle[j] = ((psi_tmle - ground_truth)**2) / (ground_truth**2 + 1e-8)
+            rmse_simple[j] = (psi_n - ground_truth)**2
+            rmse_tmle[j] = (psi_tmle - ground_truth)**2
 
+        """
         print(f'MAE results for model: {model}\n')
         print(f'mae_simple: {mae_simple}')
         print(f'mae_tmle: {mae_tmle}\n')
         print('RSE results for model: {model}\n')
         print(f'rse_simple: {rse_simple}')
         print(f'rse_tmle: {rse_tmle}\n')
+        """
 
         mae_dict[model] = mae_simple.mean()
-        rse_dict[model] = rse_simple.mean()
+        rmse_dict[model] = np.sqrt(rmse_simple.mean())
 
         mae_tmle_dict[model] = mae_tmle.mean()
-        rse_tmle_dict[model] = rse_tmle.mean()
+        rmse_tmle_dict[model] = np.sqrt(rmse_tmle.mean())
 
-    return mae_dict, mae_tmle_dict, rse_dict, rse_tmle_dict
+    return mae_dict, mae_tmle_dict, rmse_dict, rmse_tmle_dict
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Compute ATE estimates")
@@ -159,14 +161,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    mae_naive, mae_tmle, rse_naive, rse_tmle = ate(args.folder, args.split)
+    mae_naive, mae_tmle, rmse_naive, rmse_tmle = ate(args.folder, args.split)
 
     print("Naive ATE metrics:")
     for k in mae_naive:
-        print(f"  {k} -> MAE: {mae_naive[k]:.4f}, RSE: {rse_naive[k]:.4f}")
+        print(f"  {k} -> MAE: {mae_naive[k]:.4f}, RSE: {rmse_naive[k]:.4f}")
 
     print("\nTMLE ATE metrics:")
     for k in mae_tmle:
-        print(f"  {k} -> MAE: {mae_tmle[k]:.4f}, RSE: {rse_tmle[k]:.4f}")
-
-    
+        print(f"  {k} -> MAE: {mae_tmle[k]:.4f}, RSE: {rmse_tmle[k]:.4f}")
